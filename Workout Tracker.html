@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<!-- saved from url=(0058)file:///Users/julianwaite/Downloads/workout_tracker_2.html -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Workout Tracker</title>
+<link href="./Workout Tracker_files/css2" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0e0e0f;
+    --surface: #18181b;
+    --surface2: #222226;
+    --border: #2e2e34;
+    --accent: #c8f547;
+    --accent-dim: rgba(200,245,71,0.12);
+    --text: #f0f0ee;
+    --muted: #7a7a82;
+    --warn: #f5a623;
+    --warn-dim: rgba(245,166,35,0.12);
+    --good: #4ade80;
+    --good-dim: rgba(74,222,128,0.1);
+    --danger: #f87171;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Syne', sans-serif; min-height: 100vh; padding: 2rem 1rem; }
+  mono { font-family: 'DM Mono', monospace; }
+
+  h1 { font-size: 1.6rem; font-weight: 700; letter-spacing: -0.02em; }
+  .subtitle { font-size: 0.8rem; color: var(--muted); font-family: 'DM Mono', monospace; margin-top: 4px; }
+
+  .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem; }
+  .date-badge { font-family: 'DM Mono', monospace; font-size: 0.75rem; color: var(--accent); background: var(--accent-dim); border: 1px solid rgba(200,245,71,0.25); padding: 4px 10px; border-radius: 4px; }
+
+  .tabs { display: flex; gap: 4px; margin-bottom: 1.5rem; background: var(--surface); padding: 4px; border-radius: 8px; }
+  .tab { flex: 1; padding: 8px 4px; text-align: center; font-size: 0.75rem; font-weight: 600; cursor: pointer; border-radius: 6px; border: none; background: transparent; color: var(--muted); transition: all 0.15s; letter-spacing: 0.04em; }
+  .tab.active { background: var(--surface2); color: var(--accent); }
+  .tab:hover:not(.active) { color: var(--text); }
+
+  .session { display: none; }
+  .session.active { display: block; }
+
+  .session-header { font-size: 0.7rem; font-family: 'DM Mono', monospace; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border); }
+
+  .exercise { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1rem 1.1rem; margin-bottom: 10px; }
+  .exercise-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+  .exercise-name { font-size: 0.95rem; font-weight: 600; }
+  .exercise-meta { font-size: 0.7rem; font-family: 'DM Mono', monospace; color: var(--muted); margin-top: 2px; }
+  .pb-badge { font-size: 0.65rem; font-family: 'DM Mono', monospace; background: var(--accent-dim); color: var(--accent); border: 1px solid rgba(200,245,71,0.3); padding: 2px 7px; border-radius: 3px; white-space: nowrap; }
+  .warn-badge { font-size: 0.65rem; font-family: 'DM Mono', monospace; background: var(--warn-dim); color: var(--warn); border: 1px solid rgba(245,166,35,0.3); padding: 2px 7px; border-radius: 3px; }
+
+  .sets-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .set-input { display: flex; flex-direction: column; gap: 3px; }
+  .set-label { font-size: 0.6rem; font-family: 'DM Mono', monospace; color: var(--muted); text-align: center; }
+  .set-fields { display: flex; gap: 3px; }
+  .set-fields input { flex: 1; background: var(--surface2); border: 1px solid var(--border); border-radius: 5px; padding: 6px 4px; font-size: 0.8rem; font-family: 'DM Mono', monospace; color: var(--text); text-align: center; width: 100%; transition: border-color 0.15s; }
+  .set-fields input:focus { outline: none; border-color: var(--accent); }
+  .set-fields input::placeholder { color: var(--border); }
+  .sep { font-size: 0.7rem; color: var(--muted); align-self: center; }
+
+  .prev-best { font-size: 0.65rem; font-family: 'DM Mono', monospace; color: var(--muted); margin-top: 6px; text-align: center; }
+  .prev-best span { color: var(--warn); }
+
+  .warmup-block { font-size: 0.65rem; font-family: 'DM Mono', monospace; color: var(--muted); background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; padding: 5px 8px; margin-top: 8px; letter-spacing: 0.02em; }
+  .warmup-block::before { content: ''; }
+  .note { font-size: 0.7rem; color: var(--muted); font-family: 'DM Mono', monospace; margin-top: 8px; font-style: italic; }
+  .note.warn { color: var(--warn); }
+
+  .actions { display: flex; gap: 8px; margin-top: 1.5rem; }
+  .btn { flex: 1; padding: 12px; border-radius: 8px; font-size: 0.8rem; font-weight: 600; font-family: 'Syne', sans-serif; cursor: pointer; border: none; transition: all 0.15s; letter-spacing: 0.02em; }
+  .btn-primary { background: var(--accent); color: #0e0e0f; }
+  .btn-primary:hover { filter: brightness(1.08); }
+  .btn-secondary { background: var(--surface); border: 1px solid var(--border); color: var(--muted); }
+  .btn-secondary:hover { color: var(--text); border-color: var(--muted); }
+
+  .history-section { margin-top: 2rem; }
+  .history-title { font-size: 0.7rem; font-family: 'DM Mono', monospace; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 1rem; }
+  .history-entry { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 0.9rem 1rem; margin-bottom: 8px; }
+  .history-date { font-size: 0.7rem; font-family: 'DM Mono', monospace; color: var(--accent); margin-bottom: 6px; }
+  .history-lifts { display: flex; flex-direction: column; gap: 4px; }
+  .history-lift { font-size: 0.75rem; font-family: 'DM Mono', monospace; color: var(--muted); display: flex; justify-content: space-between; }
+  .history-lift span { color: var(--text); }
+
+  .trend { display: inline-block; font-size: 0.65rem; margin-left: 6px; }
+  .trend.up { color: var(--good); }
+  .trend.down { color: var(--danger); }
+  .trend.same { color: var(--muted); }
+
+  .stats-bar { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 1.5rem; }
+  .stat { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 0.8rem; text-align: center; }
+  .stat-val { font-size: 1.2rem; font-weight: 700; font-family: 'DM Mono', monospace; color: var(--accent); }
+  .stat-label { font-size: 0.6rem; font-family: 'DM Mono', monospace; color: var(--muted); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.06em; }
+
+  .empty-state { text-align: center; padding: 2rem; color: var(--muted); font-size: 0.8rem; font-family: 'DM Mono', monospace; }
+
+  .clear-btn { font-size: 0.65rem; font-family: 'DM Mono', monospace; color: var(--muted); background: none; border: none; cursor: pointer; text-decoration: underline; padding: 4px; }
+  .clear-btn:hover { color: var(--danger); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>Workout Log</h1>
+    <div class="subtitle">progressive overload tracker — log every session</div>
+  </div>
+  <div class="date-badge" id="today-date">Mon, 18 May 2026</div>
+</div>
+<div id="week-pattern" style="font-size:0.7rem;font-family:&#39;DM Mono&#39;,monospace;color:var(--warn);background:var(--warn-dim);border:1px solid rgba(245,166,35,0.25);padding:5px 12px;border-radius:4px;margin-bottom:1.5rem;display:inline-block;">Week A — 2x tricep, 1x bicep</div>
+
+<div class="stats-bar">
+  <div class="stat">
+    <div class="stat-val" id="total-sessions">3</div>
+    <div class="stat-label">Sessions</div>
+  </div>
+  <div class="stat">
+    <div class="stat-val" id="total-pbs">11</div>
+    <div class="stat-label">PBs set</div>
+  </div>
+  <div class="stat">
+    <div class="stat-val" id="streak">3</div>
+    <div class="stat-label">Week streak</div>
+  </div>
+</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="switchTab(&#39;mon&#39;)">MON<br><span style="font-weight:400;opacity:0.7">Power</span></button>
+  <button class="tab" onclick="switchTab(&#39;wed&#39;)">WED<br><span style="font-weight:400;opacity:0.7">Control</span></button>
+  <button class="tab" onclick="switchTab(&#39;fri&#39;)">FRI<br><span style="font-weight:400;opacity:0.7">Strength</span></button>
+  <button class="tab" onclick="switchTab(&#39;history&#39;)">HISTORY</button>
+</div>
+
+<div id="session-mon" class="session active">
+  <div class="session-header">Monday — Power // 3 sets each unless noted</div>
+  <div id="exercises-mon">
+      <div class="exercise" id="card_squat">
+        <div class="exercise-top">
+          <div>
+            <div class="exercise-name">Back squat</div>
+            <div class="exercise-meta">3 × 5</div>
+          </div>
+          <div class="pb-badge" id="pb_squat">PB: 50kg×10</div>
+        </div>
+        <div class="sets-row">
+        <div class="set-input">
+          <div class="set-label">Set 1</div>
+          <div class="set-fields">
+            <input type="number" id="squat_w0" placeholder="50" step="0.5" min="0" oninput="checkPB(&#39;squat&#39;,&#39;mon&#39;)">
+            <div class="sep">×</div>
+            <input type="number" id="squat_r0" placeholder="10" min="0" oninput="checkPB(&#39;squat&#39;,&#39;mon&#39;)">
+          </div>
+        </div>
+        <div class="set-input">
+          <div class="set-label">Set 2</div>
+          <div class="set-fields">
+            <input type="number" id="squat_w1" placeholder="50" step="0.5" min="0" oninput="checkPB(&#39;squat&#39;,&#39;mon&#39;)">
+            <div class="sep">×</div>
+            <input type="number" id="squat_r1" placeholder="10" min="0" oninput="checkPB(&#39;squat&#39;,&#39;mon&#39;)">
+          </div>
+        </div>
+        <div class="set-input">
+          <div class="set-label">Set 3</div>
+          <div class="set-fields">
+            <input type="number" id="squat_w2" placeholder="50" step="0.5" min="0" oninput="checkPB(&#39;squat&#39;,&#39;mon&#39;)">
+            <div class="sep">×</div>
+            <input type="number" id="squat_r2" placeholder="10" min="0" oninput="checkPB(&#39;squat&#39;,&#39;mon&#39;)">
+          </div>
+        </div></div>
+        <div class="warmup-block">WARM-UP: Empty bar x 10, then 50% x 5, then 75% x 3</div>
+        <div class="prev-best">Last session: <span>50kg×10, 50kg×10, 50kg×10</span></div>
+        <div class="note">Go heavy — 5 reps, not 8. Add weight each week.</div>
+      </div>
+      <div class="exercise" id="card_ohp">
+        <div class="exercise-top">
+          <div>
+            <div class="exercise-name">Overhead press</div>
+            <div class="exercise-meta">3 × 10</div>
+          </div>
+          <div class="pb-badge" id="pb_ohp">PB: 32kg×10</div>
+        </div>
+        <div class="sets-row">
+        <div class="set-input">
+          <div class="set-label">Set 1</div>
+          <div class="set-fields">
+            <input type="number" id="ohp_w0" placeholder="32" step="0.5" min="0" oninput="checkPB(&#39;ohp&#39;,&#39;mon&#39;)">
+            <div class="sep">×</div>
+            <input type="number" id="ohp_r0" placeholder="10" min="0" oninput="checkPB(&#39;ohp&#39;,&#39;mon&#39;)">
+          </div>
+        </div>
+        <div class="set-input">
+          <div class="set-label">Set 2</div>
+          <div class="set-fields">
+            <input type="number" id="ohp_w1" placeholder="32" step="0.5" min="0" oninput="checkPB(&#39;ohp&#39;,&#39;mon&#39;)">
+            <div class="sep">×</div>
+            <input type="number" id="ohp_r1" placeholder="10" min="0" oninput="checkPB(&#39;ohp&#39;,&#39;mon&#39;)">
+          </div>
+        </div>
+        <div class="set-input">
+          <div class="set-label">Set 3</div>
+          <div class="set-fields">
+            <input type="number" id="ohp_w2" placeholder="32" step="0.5" min="0" oninput="checkPB(&#39;ohp&#39;,&#39;mon&#39;)">
+            <div class="sep">×</div>
+            <input type="number" id="ohp_r2" placeholder="10" min="0" oninput="checkPB(&#39;ohp&#39;,&#39;mon&#39;)">
+          </div>
+        </div></div>
+        <div class="warmup-block">WARM-UP: Empty bar x 10, then 60% working weight x 5</div>
+        <div class="prev-best">Last session: <span>32kg×10, 32kg×10, 32kg×10</span></div>
+        
+      </div>
+      <div class="exercise" id="card_row">
+        <div class="exercise-top">
+          <div>
+            <div class="exercise-name">Barbell row</div>
+            <div class="exercise-meta">3 × 10</div>
+          </div>
+          <div class="pb-badge" id="pb_row">PB: 32kg×10</div>
+        </div>
+        <div class="sets-row">
+        <div class="set-input">
+          <div class="set-label">Set 1</div>
+          <div class="set-fields">
+            <input type="number" id="row_w0" placeholder="32" step="0.5" min="0" oninput="checkPB(&#39;row&#39;,&#39;mon&#39;)">
+            <div class="sep">×</div>
+            <input type="number" id="row_r0" placeholder="10" min="0" oninput="checkPB(&#39;row&#39;,&#39;mon&#39;)">
+          </div>
+        </div>
+        <div class="set-input">
+          <div class="set-label">Set 2</div>
+          <div class="set-fields">
+            <input type="number" id="row_w1" placeholder="32" step="0.5" min="0" oninput="checkPB(&#39;row&#39;,&#39;mon&#39;)">
+            <div class="sep">×</div>
+            <input type="number" id="row_r1" placeholder="10" min="0" oninput="checkPB(&#39;row&#39;,&#39;mon&#39;)">
+          </div>
+        </div>
+        <div class="set-input">
+          <div class="set-label">Set 3</div>
+          <div class="set-fields">
+            <input type="number" id="row_w2" placeholder="32" step="0.5" min="0" oninput="checkPB(&#39;row&#39;,&#39;mon&#39;)">
+            <div class="sep">×</div>
+            <input type="number" id="row_r2" placeholder="10" min="0" oninput="checkPB(&#39;row&#39;,&#39;mon&#39;)">
+          </div>
+        </div></div>
+        <div class="warmup-block">WARM-UP: 50% working weight x 10 reps</div>
+        <div class="prev-best">Last session: <span>32kg×10, 32kg×10, 32kg×10</span></div>
+        
+      </div>
+      <div class="exercise" id="card_tricep_cgbp">
+        <div class="exercise-top">
+          <div>
+            <div class="exercise-name">Close-grip bench press</div>
+            <div class="exercise-meta">3 × 10-12</div>
+          </div>
+          <div class="pb-badge" id="pb_tricep_cgbp">PB: 42kg×10</div>
+        </div>
+        <div class="sets-row">
+        <div class="set-input">
+          <div class="set-label">Set 1</div>
+          <div class="set-fields">
+            <input type="number" id="tricep_cgbp_w0" placeholder="kg" step="0.5" min="0" oninput="checkPB(&#39;tricep_cgbp&#39;,&#39;mon&#39;)">
+            <div class="sep">×</div>
+            <input type="number" id="tricep_cgbp_r0" placeholder="reps" min="0" oninput="checkPB(&#39;tricep_cgbp&#39;,&#39;mon&#39;)">
+          </div>
+        </div>
+        <div class="set-input">
+          <div class="set-label">Set 2</div>
+          <div class="set-fields">
+            <input type="number" id="tricep_cgbp_w1" placeholder="kg" step="0.5" min="0" oninput="checkPB(&#39;tricep_cgbp&#39;,&#39;mon&#39;)">
+            <div class="sep">×</div>
+            <input type="number" id="tricep_cgbp_r1" placeholder="reps" min="0" oninput="checkPB(&#39;tricep_cgbp&#39;,&#39;mon&#39;)">
+          </div>
+        </div>
+        <div class="set-input">
+          <div class="set-label">Set 3</div>
+          <div class="set-fields">
+            <input type="number" id="tricep_cgbp_w2" placeholder="kg" step="0.5" min="0" oninput="checkPB(&#39;tricep_cgbp&#39;,&#39;mon&#39;)">
+            <div class="sep">×</div>
+            <input type="number" id="tricep_cgbp_r2" placeholder="reps" min="0" oninput="checkPB(&#39;tricep_cgbp&#39;,&#39;mon&#39;)">
+          </div>
+        </div></div>
+        
+        
+        <div class="note">Hands shoulder-width, elbows tight to body.</div>
+      </div></div>
+  <div class="actions">
+    <button class="btn btn-secondary" onclick="clearSession(&#39;mon&#39;)">Clear</button>
+    <button class="btn btn-primary" onclick="saveSession(&#39;mon&#39;)">Save session ↗</button>
+  </div>
+</div>
+
+<div id="session-wed" class="session">
+  <div class="session-header">Wednesday — Control // finish before 7pm (tennis tomorrow)</div>
+  <div id="exercises-wed">
+      <div class="exercise" id="card_goblet">
+        <div class="exercise-top">
+          <div>
+            <div class="exercise-name">Goblet squat</div>
+            <div class="exercise-meta">3 × 10</div>
+          </div>
+          <div class="pb-badge" id="pb_goblet">PB: 11.9kg×10</div>
+        </div>
+        <div class="sets-row">
+        <div class="set-input">
+          <div class="set-label">Set 1</div>
+          <div class="set-fields">
+            <input type="number" id="goblet_w0" placeholder="11.9" step="0.5" min="0" oninput="checkPB(&#39;goblet&#39;,&#39;wed&#39;)">
+            <div class="sep">×</div>
+            <input type="number" id="goblet_r0" placeholder="10" min="0" oninput="checkPB(&#39;goblet&#39;,&#39;wed&#39;)">
+          </div>
+        </div>
+        <div class="set-input">
+          <div class="set-label">Set 2</div>
+          <div class="set-fields">
+            <input type="number" id="goblet_w1" placeholder="11.9" step="0.5" min="0" oninput="checkPB(&#39;goblet&#39;,&#39;wed&#39;)">
+            <div class="sep">×</div>
+            <input type="number" id="goblet_r1" placeholder="10" min="0" oninput="checkPB(&#39;goblet&#39;,&#39;wed&#39;)">
+          </div>
+        </div>
+        <div class="set-input">
+          <div class="set-label">Set 3</div>
+          <div class="set-fields">
+            <input type="number" id="goblet_w2" placeholder="11.9" step="0.5" min="0" oninput="checkPB(&#39;goblet&#39;,&#39;wed&#39;)">
+            <div class="sep">×</div>
+            <input type="number" id="goblet_r2" placeholder="10" min="0" oninput="checkPB(&#39;goblet&#39;,&#39;wed&#39;)">
+          </div>
+        </div></div>
+        <div class="warmup-block">WARM-UP: 50% of working weight x 10 reps</div>
+        <div class="prev-best">Last session: <span>11.9kg×10, 11.9kg×10, 11.9kg×10</span></div>
+        <div class="note">Replaces barbell lunges — safer day before tennis.</div>
+      </div>
+      <div class="exercise" id="card_bench">
+        <div class="exercise-top">
+          <div>
+            <div class="exercise-name">Bench press</div>
+            <div class="exercise-meta">3 × 10</div>
+          </div>
+          <div class="pb-badge" id="pb_bench">PB: 45kg×10</div>
+        </div>
+        <div class="sets-row">
+        <div class="set-input">
+          <div class="set-label">Set 1</div>
+          <div class="set-fields">
+            <input type="number" id="bench_w0" placeholder="45" step="0.5" min="0" oninput="checkPB(&#39;bench&#39;,&#39;wed&#39;)">
+            <div class="sep">×</div>
+            <input type="number" id="bench_r0" placeholder="10" min="0" oninput="checkPB(&#39;bench&#39;,&#39;wed&#39;)">
+          </div>
+        </div>
+        <div class="set-input">
+          <div class="set-label">Set 2</div>
+          <div class="set-fields">
+            <input type="number" id="bench_w1" placeholder="45" step="0.5" min="0" oninput="checkPB(&#39;bench&#39;,&#39;wed&#39;)">
+            <div class="sep">×</div>
+            <input type="number" id="bench_r1" placeholder="10" min="0" oninput="checkPB(&#39;bench&#39;,&#39;wed&#39;)">
+          </div>
+        </div>
+        <div class="set-input">
+          <div class="set-label">Set 3</div>
+          <div class="set-fields">
+            <input type="number" id="bench_w2" placeholder="45" step="0.5" min="0" oninput="checkPB(&#39;bench&#39;,&#39;wed&#39;)">
+            <div class="sep">×</div>
+            <input type="number" id="bench_r2" placeholder="10" min="0" oninput="checkPB(&#39;bench&#39;,&#39;wed&#39;)">
+          </div>
+        </div></div>
+        <div class="warmup-block">WARM-UP: Empty bar x 10, then 60% working weight x 5</div>
+        <div class="prev-best">Last session: <span>45kg×10, 45kg×10, 45kg×10</span></div>
+        
+      </div>
+      <div class="exercise" id="card_landmine">
+        <div class="exercise-top">
+          <div>
+            <div class="exercise-name">Landmine twist</div>
+            <div class="exercise-meta">3 × 12 each side</div>
+          </div>
+          <div class="pb-badge" id="pb_landmine">PB: 25kg×10</div>
+        </div>
+        <div class="sets-row">
+        <div class="set-input">
+          <div class="set-label">Set 1</div>
+          <div class="set-fields">
+            <input type="number" id="landmine_w0" placeholder="25" step="0.5" min="0" oninput="checkPB(&#39;landmine&#39;,&#39;wed&#39;)">
+            <div class="sep">×</div>
+            <input type="number" id="landmine_r0" placeholder="10" min="0" oninput="checkPB(&#39;landmine&#39;,&#39;wed&#39;)">
+          </div>
+        </div>
+        <div class="set-input">
+          <div class="set-label">Set 2</div>
+          <div class="set-fields">
+            <input type="number" id="landmine_w1" placeholder="25" step="0.5" min="0" oninput="checkPB(&#39;landmine&#39;,&#39;wed&#39;)">
+            <div class="sep">×</div>
+            <input type="number" id="landmine_r1" placeholder="10" min="0" oninput="checkPB(&#39;landmine&#39;,&#39;wed&#39;)">
+          </div>
+        </div>
+        <div class="set-input">
+          <div class="set-label">Set 3</div>
+          <div class="set-fields">
+            <input type="number" id="landmine_w2" placeholder="25" step="0.5" min="0" oninput="checkPB(&#39;landmine&#39;,&#39;wed&#39;)">
+            <div class="sep">×</div>
+            <input type="number" id="landmine_r2" placeholder="10" min="0" oninput="checkPB(&#39;landmine&#39;,&#39;wed&#39;)">
+          </div>
+        </div></div>
+        <div class="warmup-block">WARM-UP: Light plate x 10 each side</div>
+        <div class="prev-best">Last session: <span>25kg×10, 25kg×10, 25kg×10</span></div>
+        <div class="note">Rotational core — your secret tennis weapon.</div>
+      </div>
+      <div class="exercise" id="card_bicep_curl">
+        <div class="exercise-top">
+          <div>
+            <div class="exercise-name">Bicep curl</div>
+            <div class="exercise-meta">3 × 10-12</div>
+          </div>
+          <div class="pb-badge" id="pb_bicep_curl">PB: 22kg×10</div>
+        </div>
+        <div class="sets-row">
+        <div class="set-input">
+          <div class="set-label">Set 1</div>
+          <div class="set-fields">
+            <input type="number" id="bicep_curl_w0" placeholder="kg" step="0.5" min="0" oninput="checkPB(&#39;bicep_curl&#39;,&#39;wed&#39;)">
+            <div class="sep">×</div>
+            <input type="number" id="bicep_curl_r0" placeholder="reps" min="0" oninput="checkPB(&#39;bicep_curl&#39;,&#39;wed&#39;)">
+          </div>
+        </div>
+        <div class="set-input">
+          <div class="set-label">Set 2</div>
+          <div class="set-fields">
+            <input type="number" id="bicep_curl_w1" placeholder="kg" step="0.5" min="0" oninput="checkPB(&#39;bicep_curl&#39;,&#39;wed&#39;)">
+            <div class="sep">×</div>
+            <input type="number" id="bicep_curl_r1" placeholder="reps" min="0" oninput="checkPB(&#39;bicep_curl&#39;,&#39;wed&#39;)">
+          </div>
+        </div>
+        <div class="set-input">
+          <div class="set-label">Set 3</div>
+          <div class="set-fields">
+            <input type="number" id="bicep_curl_w2" placeholder="kg" step="0.5" min="0" oninput="checkPB(&#39;bicep_curl&#39;,&#39;wed&#39;)">
+            <div class="sep">×</div>
+            <input type="number" id="bicep_curl_r2" placeholder="reps" min="0" oninput="checkPB(&#39;bicep_curl&#39;,&#39;wed&#39;)">
+          </div>
+        </div></div>
+        
+        
+        <div class="note">Isolation — after compound work.</div>
+      </div></div>
+  <div class="actions">
+    <button class="btn btn-secondary" onclick="clearSession(&#39;wed&#39;)">Clear</button>
+    <button class="btn btn-primary" onclick="saveSession(&#39;wed&#39;)">Save session ↗</button>
+  </div>
+</div>
+
+<div id="session-fri" class="session">
+  <div class="session-header">Friday — Strength // deadlift form over weight always</div>
+  <div id="exercises-fri">
+      <div class="exercise" id="card_deadlift">
+        <div class="exercise-top">
+          <div>
+            <div class="exercise-name">Deadlift</div>
+            <div class="exercise-meta">3 × 5</div>
+          </div>
+          <div class="pb-badge" id="pb_deadlift">PB: 100kg×10</div>
+        </div>
+        <div class="sets-row">
+        <div class="set-input">
+          <div class="set-label">Set 1</div>
+          <div class="set-fields">
+            <input type="number" id="deadlift_w0" placeholder="100" step="0.5" min="0" oninput="checkPB(&#39;deadlift&#39;,&#39;fri&#39;)">
+            <div class="sep">×</div>
+            <input type="number" id="deadlift_r0" placeholder="10" min="0" oninput="checkPB(&#39;deadlift&#39;,&#39;fri&#39;)">
+          </div>
+        </div>
+        <div class="set-input">
+          <div class="set-label">Set 2</div>
+          <div class="set-fields">
+            <input type="number" id="deadlift_w1" placeholder="100" step="0.5" min="0" oninput="checkPB(&#39;deadlift&#39;,&#39;fri&#39;)">
+            <div class="sep">×</div>
+            <input type="number" id="deadlift_r1" placeholder="10" min="0" oninput="checkPB(&#39;deadlift&#39;,&#39;fri&#39;)">
+          </div>
+        </div>
+        <div class="set-input">
+          <div class="set-label">Set 3</div>
+          <div class="set-fields">
+            <input type="number" id="deadlift_w2" placeholder="100" step="0.5" min="0" oninput="checkPB(&#39;deadlift&#39;,&#39;fri&#39;)">
+            <div class="sep">×</div>
+            <input type="number" id="deadlift_r2" placeholder="10" min="0" oninput="checkPB(&#39;deadlift&#39;,&#39;fri&#39;)">
+          </div>
+        </div></div>
+        <div class="warmup-block">WARM-UP: Empty bar x 10, then 50% x 5, then 75% x 3</div>
+        <div class="prev-best">Last session: <span>100kg×10, 100kg×10, 100kg×10</span></div>
+        <div class="note warn">⚠ Neutral spine every rep. Form before weight.</div>
+      </div>
+      <div class="exercise" id="card_hip_thrust">
+        <div class="exercise-top">
+          <div>
+            <div class="exercise-name">Barbell hip thrust</div>
+            <div class="exercise-meta">3 × 10</div>
+          </div>
+          <div class="pb-badge" id="pb_hip_thrust">PB: 25kg×10</div>
+        </div>
+        <div class="sets-row">
+        <div class="set-input">
+          <div class="set-label">Set 1</div>
+          <div class="set-fields">
+            <input type="number" id="hip_thrust_w0" placeholder="25" step="0.5" min="0" oninput="checkPB(&#39;hip_thrust&#39;,&#39;fri&#39;)">
+            <div class="sep">×</div>
+            <input type="number" id="hip_thrust_r0" placeholder="10" min="0" oninput="checkPB(&#39;hip_thrust&#39;,&#39;fri&#39;)">
+          </div>
+        </div>
+        <div class="set-input">
+          <div class="set-label">Set 2</div>
+          <div class="set-fields">
+            <input type="number" id="hip_thrust_w1" placeholder="25" step="0.5" min="0" oninput="checkPB(&#39;hip_thrust&#39;,&#39;fri&#39;)">
+            <div class="sep">×</div>
+            <input type="number" id="hip_thrust_r1" placeholder="10" min="0" oninput="checkPB(&#39;hip_thrust&#39;,&#39;fri&#39;)">
+          </div>
+        </div>
+        <div class="set-input">
+          <div class="set-label">Set 3</div>
+          <div class="set-fields">
+            <input type="number" id="hip_thrust_w2" placeholder="25" step="0.5" min="0" oninput="checkPB(&#39;hip_thrust&#39;,&#39;fri&#39;)">
+            <div class="sep">×</div>
+            <input type="number" id="hip_thrust_r2" placeholder="10" min="0" oninput="checkPB(&#39;hip_thrust&#39;,&#39;fri&#39;)">
+          </div>
+        </div></div>
+        <div class="warmup-block">WARM-UP: Bodyweight x 10, then 50% working weight x 8</div>
+        <div class="prev-best">Last session: <span>25kg×10, 25kg×10, 25kg×10</span></div>
+        <div class="note">Glute activation — power for tennis explosiveness.</div>
+      </div>
+      <div class="exercise" id="card_lat_pulldown">
+        <div class="exercise-top">
+          <div>
+            <div class="exercise-name">Lat pulldown</div>
+            <div class="exercise-meta">3 × 10</div>
+          </div>
+          <div class="pb-badge" id="pb_lat_pulldown">PB: 35kg×10</div>
+        </div>
+        <div class="sets-row">
+        <div class="set-input">
+          <div class="set-label">Set 1</div>
+          <div class="set-fields">
+            <input type="number" id="lat_pulldown_w0" placeholder="35" step="0.5" min="0" oninput="checkPB(&#39;lat_pulldown&#39;,&#39;fri&#39;)">
+            <div class="sep">×</div>
+            <input type="number" id="lat_pulldown_r0" placeholder="10" min="0" oninput="checkPB(&#39;lat_pulldown&#39;,&#39;fri&#39;)">
+          </div>
+        </div>
+        <div class="set-input">
+          <div class="set-label">Set 2</div>
+          <div class="set-fields">
+            <input type="number" id="lat_pulldown_w1" placeholder="35" step="0.5" min="0" oninput="checkPB(&#39;lat_pulldown&#39;,&#39;fri&#39;)">
+            <div class="sep">×</div>
+            <input type="number" id="lat_pulldown_r1" placeholder="10" min="0" oninput="checkPB(&#39;lat_pulldown&#39;,&#39;fri&#39;)">
+          </div>
+        </div>
+        <div class="set-input">
+          <div class="set-label">Set 3</div>
+          <div class="set-fields">
+            <input type="number" id="lat_pulldown_w2" placeholder="35" step="0.5" min="0" oninput="checkPB(&#39;lat_pulldown&#39;,&#39;fri&#39;)">
+            <div class="sep">×</div>
+            <input type="number" id="lat_pulldown_r2" placeholder="10" min="0" oninput="checkPB(&#39;lat_pulldown&#39;,&#39;fri&#39;)">
+          </div>
+        </div></div>
+        <div class="warmup-block">WARM-UP: 50% working weight x 10 reps</div>
+        <div class="prev-best">Last session: <span>35kg×10, 35kg×10, 35kg×10</span></div>
+        <div class="note">Full stretch at top, drive elbows down to lats.</div>
+      </div>
+      <div class="exercise" id="card_tricep_cgbp">
+        <div class="exercise-top">
+          <div>
+            <div class="exercise-name">Close-grip bench press</div>
+            <div class="exercise-meta">3 × 10-12</div>
+          </div>
+          <div class="pb-badge" id="pb_tricep_cgbp">PB: 42kg×10</div>
+        </div>
+        <div class="sets-row">
+        <div class="set-input">
+          <div class="set-label">Set 1</div>
+          <div class="set-fields">
+            <input type="number" id="tricep_cgbp_w0" placeholder="kg" step="0.5" min="0" oninput="checkPB(&#39;tricep_cgbp&#39;,&#39;fri&#39;)">
+            <div class="sep">×</div>
+            <input type="number" id="tricep_cgbp_r0" placeholder="reps" min="0" oninput="checkPB(&#39;tricep_cgbp&#39;,&#39;fri&#39;)">
+          </div>
+        </div>
+        <div class="set-input">
+          <div class="set-label">Set 2</div>
+          <div class="set-fields">
+            <input type="number" id="tricep_cgbp_w1" placeholder="kg" step="0.5" min="0" oninput="checkPB(&#39;tricep_cgbp&#39;,&#39;fri&#39;)">
+            <div class="sep">×</div>
+            <input type="number" id="tricep_cgbp_r1" placeholder="reps" min="0" oninput="checkPB(&#39;tricep_cgbp&#39;,&#39;fri&#39;)">
+          </div>
+        </div>
+        <div class="set-input">
+          <div class="set-label">Set 3</div>
+          <div class="set-fields">
+            <input type="number" id="tricep_cgbp_w2" placeholder="kg" step="0.5" min="0" oninput="checkPB(&#39;tricep_cgbp&#39;,&#39;fri&#39;)">
+            <div class="sep">×</div>
+            <input type="number" id="tricep_cgbp_r2" placeholder="reps" min="0" oninput="checkPB(&#39;tricep_cgbp&#39;,&#39;fri&#39;)">
+          </div>
+        </div></div>
+        
+        
+        <div class="note">Hands shoulder-width, elbows tight to body.</div>
+      </div></div>
+  <div class="actions">
+    <button class="btn btn-secondary" onclick="clearSession(&#39;fri&#39;)">Clear</button>
+    <button class="btn btn-primary" onclick="saveSession(&#39;fri&#39;)">Save session ↗</button>
+  </div>
+</div>
+
+<div id="session-history" class="session">
+  <div class="session-header">Session history — all logged workouts</div>
+  <div id="history-content"></div>
+</div>
+
+<script>
+const BICEP = { id: 'bicep_curl', name: 'Bicep curl', sets: 3, reps: '10-12', note: 'Isolation — after compound work.', warmup: null };
+const TRICEP = { id: 'tricep_cgbp', name: 'Close-grip bench press', sets: 3, reps: '10-12', note: 'Hands shoulder-width, elbows tight to body.', warmup: null };
+
+function getWeekParity() {
+  // Week of 18 May 2026 is Week A (parity 0). Alternates correctly from there.
+  const weekNum = Math.floor(Date.now() / (7 * 24 * 60 * 60 * 1000));
+  const baseWeek = Math.floor(new Date('2026-05-18').getTime() / (7 * 24 * 60 * 60 * 1000));
+  return (weekNum - baseWeek) % 2 === 0 ? 0 : 1;
+}
+
+function getIsoPattern() {
+  const p = getWeekParity();
+  // Week A = 2x tricep, 1x bicep (mon=tricep, wed=bicep, fri=tricep)
+  // Week B = 2x bicep, 1x tricep (mon=bicep, wed=tricep, fri=bicep)
+  return p === 0
+    ? { mon: TRICEP, wed: BICEP, fri: TRICEP, label: 'Week A — 2x tricep, 1x bicep' }
+    : { mon: BICEP, wed: TRICEP, fri: BICEP, label: 'Week B — 2x bicep, 1x tricep' };
+}
+
+function buildSessions() {
+  const iso = getIsoPattern();
+  return {
+    mon: [
+      { id: 'squat', name: 'Back squat', sets: 3, reps: '5', note: 'Go heavy — 5 reps, not 8. Add weight each week.', warmup: 'Empty bar x 10, then 50% x 5, then 75% x 3' },
+      { id: 'ohp', name: 'Overhead press', sets: 3, reps: '10', note: null, warmup: 'Empty bar x 10, then 60% working weight x 5' },
+      { id: 'row', name: 'Barbell row', sets: 3, reps: '10', note: null, warmup: '50% working weight x 10 reps' },
+      iso.mon,
+    ],
+    wed: [
+      { id: 'goblet', name: 'Goblet squat', sets: 3, reps: '10', note: 'Replaces barbell lunges — safer day before tennis.', warmup: '50% of working weight x 10 reps' },
+      { id: 'bench', name: 'Bench press', sets: 3, reps: '10', note: null, warmup: 'Empty bar x 10, then 60% working weight x 5' },
+      { id: 'landmine', name: 'Landmine twist', sets: 3, reps: '12 each side', note: 'Rotational core — your secret tennis weapon.', warmup: 'Light plate x 10 each side' },
+      iso.wed,
+    ],
+    fri: [
+      { id: 'deadlift', name: 'Deadlift', sets: 3, reps: '5', note: null, warn: 'Neutral spine every rep. Form before weight.', warmup: 'Empty bar x 10, then 50% x 5, then 75% x 3' },
+      { id: 'hip_thrust', name: 'Barbell hip thrust', sets: 3, reps: '10', note: 'Glute activation — power for tennis explosiveness.', warmup: 'Bodyweight x 10, then 50% working weight x 8' },
+      { id: 'lat_pulldown', name: 'Lat pulldown', sets: 3, reps: '10', note: 'Full stretch at top, drive elbows down to lats.', warmup: '50% working weight x 10 reps' },
+      iso.fri,
+    ]
+  };
+}
+
+let SESSIONS = buildSessions();
+
+// Seed last week's session data as baseline if history is empty
+const SEED_KEY = 'wl_seeded_v2';
+if (!localStorage.getItem(SEED_KEY)) {
+  const lastMon = 'Mon, 12 May 2026';
+  const lastWed = 'Wed, 14 May 2026';
+  const lastFri = 'Fri, 16 May 2026';
+  const mk = w => [{ weight: w, reps: '10' }, { weight: w, reps: '10' }, { weight: w, reps: '10' }];
+  const mk1 = w => [{ weight: w, reps: '10' }];
+  const seedHistory = [
+    { date: lastMon, dateKey: '2026-4-12', day: 'mon', note: 'Baseline — below working ceiling', lifts: {
+      squat: mk('50'), ohp: mk('32'), row: mk('32'), bicep_curl: mk1('22')
+    }},
+    { date: lastWed, dateKey: '2026-4-14', day: 'wed', note: 'Baseline — below working ceiling', lifts: {
+      goblet: mk('11.9'), bench: mk('45'), landmine: mk('25'), tricep_cgbp: mk1('42')
+    }},
+    { date: lastFri, dateKey: '2026-4-16', day: 'fri', note: 'Baseline — below working ceiling', lifts: {
+      deadlift: mk('100'), hip_thrust: mk('25'), lat_pulldown: mk('35'), bicep_curl: mk1('22')
+    }},
+  ];
+  const existing = JSON.parse(localStorage.getItem('wl_history') || '[]');
+  if (existing.length === 0) {
+    localStorage.setItem('wl_history', JSON.stringify(seedHistory));
+  }
+  localStorage.setItem(SEED_KEY, '1');
+}
+
+let history = JSON.parse(localStorage.getItem('wl_history') || '[]');
+
+function today() {
+  return new Date().toLocaleDateString('en-GB', { weekday:'short', day:'numeric', month:'short', year:'numeric' });
+}
+
+function todayKey() {
+  const d = new Date();
+  return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+}
+
+document.getElementById('today-date').textContent = today();
+document.getElementById('week-pattern').textContent = getIsoPattern().label;
+
+function getPB(exerciseId) {
+  let best = null;
+  history.forEach(s => {
+    if (s.lifts && s.lifts[exerciseId]) {
+      s.lifts[exerciseId].forEach(set => {
+        const w = parseFloat(set.weight);
+        const r = parseFloat(set.reps);
+        if (!isNaN(w) && !isNaN(r)) {
+          const vol = w * r;
+          if (best === null || vol > best.vol) best = { weight: w, reps: r, vol, date: s.date };
+        }
+      });
+    }
+  });
+  return best;
+}
+
+function getLastSession(exerciseId, day) {
+  const daySessions = history.filter(s => s.day === day).slice(-1)[0];
+  if (daySessions && daySessions.lifts && daySessions.lifts[exerciseId]) {
+    return daySessions.lifts[exerciseId];
+  }
+  return null;
+}
+
+function renderExercises(day) {
+  const container = document.getElementById(`exercises-${day}`);
+  container.innerHTML = '';
+  SESSIONS[day].forEach(ex => {
+    const pb = getPB(ex.id);
+    const last = getLastSession(ex.id, day);
+    const lastStr = last ? last.map(s => `${s.weight||'?'}kg×${s.reps||'?'}`).join(', ') : null;
+
+    let setsHtml = '';
+    for (let i = 0; i < ex.sets; i++) {
+      const lw = last && last[i] ? last[i].weight : '';
+      const lr = last && last[i] ? last[i].reps : '';
+      setsHtml += `
+        <div class="set-input">
+          <div class="set-label">Set ${i+1}</div>
+          <div class="set-fields">
+            <input type="number" id="${ex.id}_w${i}" placeholder="${lw||'kg'}" step="0.5" min="0" oninput="checkPB('${ex.id}','${day}')">
+            <div class="sep">×</div>
+            <input type="number" id="${ex.id}_r${i}" placeholder="${lr||'reps'}" min="0" oninput="checkPB('${ex.id}','${day}')">
+          </div>
+        </div>`;
+    }
+
+    const warmupHtml = ex.warmup
+      ? `<div class="warmup-block">WARM-UP: ${ex.warmup}</div>` : '';
+
+    const noteHtml = ex.warn
+      ? `<div class="note warn">⚠ ${ex.warn}</div>`
+      : ex.note ? `<div class="note">${ex.note}</div>` : '';
+
+    container.innerHTML += `
+      <div class="exercise" id="card_${ex.id}">
+        <div class="exercise-top">
+          <div>
+            <div class="exercise-name">${ex.name}</div>
+            <div class="exercise-meta">${ex.sets} × ${ex.reps}</div>
+          </div>
+          ${pb ? `<div class="pb-badge" id="pb_${ex.id}">PB: ${pb.weight}kg×${pb.reps}</div>` : `<div id="pb_${ex.id}"></div>`}
+        </div>
+        <div class="sets-row">${setsHtml}</div>
+        ${warmupHtml}
+        ${lastStr ? `<div class="prev-best">Last session: <span>${lastStr}</span></div>` : ''}
+        ${noteHtml}
+      </div>`;
+  });
+}
+
+function checkPB(exerciseId, day) {
+  const ex = SESSIONS[day].find(e => e.id === exerciseId);
+  if (!ex) return;
+  const pb = getPB(exerciseId);
+  let newBest = false;
+  for (let i = 0; i < ex.sets; i++) {
+    const w = parseFloat(document.getElementById(`${exerciseId}_w${i}`)?.value);
+    const r = parseFloat(document.getElementById(`${exerciseId}_r${i}`)?.value);
+    if (!isNaN(w) && !isNaN(r) && pb && (w * r) > pb.vol) newBest = true;
+    if (!isNaN(w) && !isNaN(r) && !pb) newBest = true;
+  }
+  const badge = document.getElementById(`pb_${exerciseId}`);
+  if (badge && newBest) {
+    badge.innerHTML = `<div class="pb-badge" style="background:rgba(200,245,71,0.25);border-color:var(--accent)">🏆 NEW PB!</div>`;
+  }
+}
+
+function saveSession(day) {
+  const lifts = {};
+  SESSIONS[day].forEach(ex => {
+    lifts[ex.id] = [];
+    for (let i = 0; i < ex.sets; i++) {
+      const w = document.getElementById(`${ex.id}_w${i}`)?.value;
+      const r = document.getElementById(`${ex.id}_r${i}`)?.value;
+      lifts[ex.id].push({ weight: w, reps: r });
+    }
+  });
+
+  const entry = { date: today(), dateKey: todayKey(), day, lifts };
+  history.push(entry);
+  localStorage.setItem('wl_history', JSON.stringify(history));
+  updateStats();
+  renderExercises(day);
+  alert(`Session saved! ${history.filter(s=>s.day===day).length} ${day.toUpperCase()} sessions logged.`);
+}
+
+function clearSession(day) {
+  SESSIONS[day].forEach(ex => {
+    for (let i = 0; i < ex.sets; i++) {
+      const wi = document.getElementById(`${ex.id}_w${i}`);
+      const ri = document.getElementById(`${ex.id}_r${i}`);
+      if (wi) wi.value = '';
+      if (ri) ri.value = '';
+    }
+  });
+}
+
+function renderHistory() {
+  const container = document.getElementById('history-content');
+  if (history.length === 0) {
+    container.innerHTML = '<div class="empty-state">No sessions logged yet.<br>Complete your first session to see history here.</div>';
+    return;
+  }
+  const reversed = [...history].reverse().slice(0, 30);
+  container.innerHTML = reversed.map(s => {
+    const dayConfig = SESSIONS[s.day] || [];
+    const liftRows = dayConfig.map(ex => {
+      const sets = s.lifts[ex.id] || [];
+      const summary = sets.filter(s => s.weight).map(s => `${s.weight}kg×${s.reps}`).join(', ');
+      return summary ? `<div class="history-lift">${ex.name} <span>${summary}</span></div>` : '';
+    }).filter(Boolean).join('');
+    return `
+      <div class="history-entry">
+        <div class="history-date">${s.date} — ${s.day.toUpperCase()}${s.note ? ` <span style="color:var(--muted);font-size:0.65rem">(${s.note})</span>` : ''}</div>
+        <div class="history-lifts">${liftRows || '<span style="color:var(--muted);font-size:0.7rem">No weights recorded</span>'}</div>
+      </div>`;
+  }).join('');
+
+  container.innerHTML += `<div style="text-align:center;margin-top:1rem"><button class="clear-btn" onclick="clearAll()">Clear all history</button></div>`;
+}
+
+function clearAll() {
+  if (confirm('Clear all session history? This cannot be undone.')) {
+    history = [];
+    localStorage.setItem('wl_history', JSON.stringify(history));
+    updateStats();
+    renderHistory();
+  }
+}
+
+function updateStats() {
+  document.getElementById('total-sessions').textContent = history.length;
+
+  let pbs = 0;
+  const exerciseIds = [...new Set(Object.values(SESSIONS).flat().map(e => e.id))];
+  exerciseIds.forEach(id => { if (getPB(id)) pbs++; });
+  document.getElementById('total-pbs').textContent = pbs;
+
+  const weeks = new Set(history.map(s => {
+    const d = new Date(); return `${d.getFullYear()}-W`;
+  }));
+  document.getElementById('streak').textContent = Math.min(history.length, 4);
+}
+
+function switchTab(day) {
+  document.querySelectorAll('.tab').forEach((t,i) => {
+    t.classList.toggle('active', ['mon','wed','fri','history'][i] === day);
+  });
+  document.querySelectorAll('.session').forEach(s => s.classList.remove('active'));
+  document.getElementById(`session-${day}`).classList.add('active');
+  if (day === 'history') renderHistory();
+}
+
+history = JSON.parse(localStorage.getItem('wl_history') || '[]');
+renderExercises('mon');
+renderExercises('wed');
+renderExercises('fri');
+updateStats();
+</script>
+
+
+</body></html>
